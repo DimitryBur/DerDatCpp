@@ -1,0 +1,10 @@
+^C:\USERS\DIMA\FISN\DERDATCPP\DERDATCPP\CMAKELISTS.TXT
+setlocal
+"C:\Program Files (x86)\CMake\bin\cmake.exe" -SC:/Users/Dima/fisn/DerDatCpp/derDatCpp -BC:/Users/Dima/fisn/DerDatCpp/derDatCpp/build --check-stamp-file C:/Users/Dima/fisn/DerDatCpp/derDatCpp/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

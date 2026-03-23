@@ -1,0 +1,10 @@
+^C:\USERS\DIMA\FISN\DERDATCPP\DERDATCPP\BUILD\CMAKEFILES\77CAEEBEBBD67E847142905FC69ACA9F\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files (x86)\CMake\bin\cmake.exe" -SC:/Users/Dima/fisn/DerDatCpp/derDatCpp -BC:/Users/Dima/fisn/DerDatCpp/derDatCpp/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/Dima/fisn/DerDatCpp/derDatCpp/build/MyCppProject.slnx
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
