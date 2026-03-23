@@ -1,6 +1,0 @@
-cmd.exe
-*.csv
-*.txt
-vcpkg_installed
-.vscode
-.gitignore

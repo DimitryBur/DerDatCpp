@@ -2,7 +2,13 @@
   "name": "data-workbench",
   "version": "0.1.0",
   "dependencies": [
-    "imgui",
+    {
+      "name": "imgui",
+      "features": [
+        "glfw-binding",
+        "opengl3-binding"
+      ]
+    },
     "implot",
     "duckdb",
     "nativefiledialog-extended",
