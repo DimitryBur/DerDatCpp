@@ -1,0 +1,4 @@
+cmd.exe
+*.csv
+*.txt
+__pycache__
