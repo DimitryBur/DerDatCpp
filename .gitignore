@@ -1,4 +1,6 @@
 cmd.exe
 *.csv
 *.txt
-__pycache__
+vcpkg_installed
+.vscode
+.gitignore
