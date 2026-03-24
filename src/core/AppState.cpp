@@ -1,5 +1,6 @@
-#include "AppState.h"
+#include "AppState.hpp"
 #include <algorithm>
+#include <duckdb.hpp>
 
 // Конструктор инициализирует начальное состояние
 AppState::AppState() 
