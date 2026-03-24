@@ -5,8 +5,10 @@
 #include <nfd.hpp>
 #include "model/DataModel.hpp"     // Заголовок модели
 #include "controller/AppController.cpp" 
-#include "view/ImportWindow.cpp"   // Оставляем так, если внутри ImportWindow есть class {...}
+#include "view/ImportWindow.cpp"  
 #include "view/CleanWindow.cpp" 
+#include "view/LabWindow.cpp" 
+#include "view/PlotWindow.cpp" 
 
 int main() {
     if (!glfwInit()) return -1;
