@@ -31,14 +31,12 @@ public:
     bool ImportCSV(const std::string& tableName, const std::string& filePath);
     bool DeleteTable(const std::string& tableName);
     bool UnionTables(const std::string& tableA, const std::string& tableB, const std::string& resultName);
-    
+    bool ExtractAsInt(const std::string& table, const std::string& col);
     long long GetRowCount(const std::string& tableName);
     int GetColCount(const std::string& tableName);
     bool JoinTables(const std::string& tableA, const std::string& tableB, 
                            const std::string& keyA, const std::string& keyB, 
                            const std::string& resultName, bool isLeftJoin);
-
-    
     ColumnStats GetStats(const std::string& table, const std::string& col);
     bool SmartFill(const std::string& table, const std::string& colA, const std::string& colB);
     bool CleanData(const std::string& table, const std::string& col, 
@@ -49,7 +47,8 @@ public:
     // В секцию public класса DataModel
     bool RemoveNulls(const std::string& table, const std::string& col);
     bool DropColumn(const std::string& table, const std::string& col);
-
+    std::vector<double> GetColumnData(const std::string& table, const std::string& col, int limit);
+    bool RenameColumn(const std::string& table, const std::string& oldCol, const std::string& newCol);
 
     std::vector<std::string> GetTableNames();
     std::vector<std::string> GetColumns(const std::string& table);    

@@ -58,8 +58,6 @@ ColumnStats DataModel::GetStats(const std::string& table, const std::string& col
         stats.nulls  = res_base->GetValue(1, 0).ToString();
         stats.unique = res_base->GetValue(2, 0).ToString();
     }
-
-    // 2. Считаем математику отдельно, чтобы ошибка в типах не обнулила весь отчет
     std::string sql_math = "SELECT "
         "min(\"" + col + "\")::TEXT, "
         "max(\"" + col + "\")::TEXT, "
@@ -85,8 +83,6 @@ ColumnStats DataModel::GetStats(const std::string& table, const std::string& col
 
     return stats;
 }
-
-
 std::vector<std::string> DataModel::GetTableNames() {
     std::vector<std::string> tables;
     auto res = con.Query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'");
@@ -108,6 +104,9 @@ std::vector<std::string> DataModel::GetColumns(const std::string& table) {
     }
     return cols;
 }
+
+
+
 
 bool DataModel::JoinTables(const std::string& tableA, const std::string& tableB, 
                            const std::string& keyA, const std::string& keyB, 
@@ -149,11 +148,47 @@ bool DataModel::JoinTables(const std::string& tableA, const std::string& tableB,
     auto res = con.Query(sql2);
     return !res->HasError();
     }
+    
     bool DataModel::ExtractNumbers(const std::string& table, const std::string& col) {
-    std::string sql = "UPDATE \"" + table + "\" SET \"" + col + 
-                      "\" = regexp_extract(\"" + col + "\", '([0-9]+[.,]?[0-9]*)')";
-    return !con.Query(sql)->HasError();
+    if (table.empty() || col.empty()) return false;
+    
+    std::string newCol = col + "_num";
+    
+    // 1. Создаем колонку DOUBLE
+    std::string addColSql = "ALTER TABLE \"" + table + "\" ADD COLUMN \"" + newCol + "\" DOUBLE";
+    con.Query(addColSql);
+
+    // 2. Логика извлечения с заменой запятой на точку
+    std::string updateSql = 
+        "UPDATE \"" + table + "\" SET \"" + newCol + "\" = "
+        "TRY_CAST(REPLACE(regexp_extract(\"" + col + "\"::VARCHAR, '([0-9]+([.,][0-9]+)?)'), ',', '.') AS DOUBLE)";
+    
+    bool ok = RunCommand(updateSql);
+    con.Query("CHECKPOINT");
+    return ok;
 }
+
+    bool DataModel::ExtractAsInt(const std::string& table, const std::string& col) {
+    if (table.empty() || col.empty()) return false;
+    
+    std::string newCol = col + "_int";
+    
+    // 1. Создаем колонку целого числа
+    std::string addColSql = "ALTER TABLE \"" + table + "\" ADD COLUMN \"" + newCol + "\" BIGINT";
+    con.Query(addColSql);
+
+    // 2. Логика: Извлечь -> В Double (через точку) -> Округлить -> В BIGINT
+    std::string updateSql = 
+        "UPDATE \"" + table + "\" SET \"" + newCol + "\" = "
+        "CAST(ROUND(TRY_CAST(REPLACE(regexp_extract(\"" + col + "\"::VARCHAR, '([0-9]+([.,][0-9]+)?)'), ',', '.') AS DOUBLE)) AS BIGINT)";
+    
+    bool ok = RunCommand(updateSql);
+    con.Query("CHECKPOINT");
+    return ok;
+    }
+
+
+
 
 bool DataModel::CleanData(const std::string& table, const std::string& col, 
                           FillMode mode, const std::string& param) {
@@ -198,6 +233,18 @@ bool DataModel::CleanData(const std::string& table, const std::string& col,
             return RunCommand(sql);
             }
 
+            bool DataModel::RenameColumn(const std::string& table, const std::string& oldCol, const std::string& newCol) {
+            if (table.empty() || oldCol.empty() || newCol.empty()) return false;
+    
+             // SQL: ALTER TABLE table_name RENAME COLUMN old_name TO new_name
+            std::string sql = "ALTER TABLE \"" + table + "\" RENAME COLUMN \"" + oldCol + "\" TO \"" + newCol + "\"";
+    
+            bool ok = RunCommand(sql);
+            con.Query("CHECKPOINT");
+            return ok;
+            }
+
+
             bool DataModel::DropColumn(const std::string& table, const std::string& col) {
             std::string sql = "ALTER TABLE \"" + table + "\" DROP COLUMN \"" + col + "\"";
             bool ok = RunCommand(sql);
@@ -227,6 +274,30 @@ bool DataModel::CleanData(const std::string& table, const std::string& col,
             con.Query("CHECKPOINT");
             return ok;
             }
+            std::vector<double> DataModel::GetColumnData(const std::string& table, const std::string& col, int limit) {
+            std::vector<double> data;
+            if (table.empty() || col.empty()) return data;
+
+            // ВАЖНО: Убираем обычный SELECT и используем SAMPLE
+            // Это гарантирует, что мы увидим общую картину всей таблицы, а не только первые 50 строк
+            std::string sql = "SELECT TRY_CAST(\"" + col + "\" AS DOUBLE) FROM \"" + table + 
+                      "\" WHERE \"" + col + "\" IS NOT NULL USING SAMPLE " + std::to_string(limit) + " ROWS";
+    
+            auto res = con.Query(sql);
+            if (res && !res->HasError()) {
+                while (auto chunk = res->Fetch()) {
+                    for (size_t i = 0; i < chunk->size(); i++) {
+                        data.push_back(chunk->GetValue(0, i).GetValue<double>());
+                    }
+                }
+            }
+            return data;
+            }
+
+            
+
+
+
 
 
 

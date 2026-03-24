@@ -9,6 +9,7 @@ void ImportWindow::Render(DataModel& model, AppState& state) {
     static int keyIdxA = 0; // Индекс ключа Таблицы А
     static int keyIdxB = 0; // Индекс ключа Таблицы Б
     static int joinMode = 0; // 0 - LEFT, 1 - INNER
+    
 
     float totalHeight = ImGui::GetContentRegionAvail().y;
     auto& db_con = model.GetConnection();

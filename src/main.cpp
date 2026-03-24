@@ -23,6 +23,7 @@ int main() {
     
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    ImPlot::CreateContext();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 130");
 
@@ -111,7 +112,7 @@ int main() {
         ImGui::Begin("Inspector", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove);
     
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0.8f, 0, 1));
-    ImGui::Text("ЖИВОЙ ОТЧЕТ (СТАТИСТИКА)");
+    ImGui::TextColored(ImVec4(1, 0.8f, 0, 1), "ЖИВОЙ ОТЧЕТ (СТАТИСТИКА)");
     ImGui::PopStyleColor();
     ImGui::Separator();
     
@@ -145,13 +146,35 @@ int main() {
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 0.7f, 1));
         ImGui::Text("Медиана:");     ImGui::SameLine(120); ImGui::Text("%s", stats.median.c_str());
         ImGui::PopStyleColor();
-
-        // Место под мини-график (ImPlot) в будущем
+        }
+         // --- БЛОК РАСПРЕДЕЛЕНИЯ (Гистограмма) ---
         ImGui::Spacing();
         ImGui::Separator();
-        ImGui::TextDisabled("(Здесь будет распределение)");
-        }
-        ImGui::End();
+        ImGui::TextColored(ImVec4(1, 0.5f, 0, 1), "РАСПРЕДЕЛЕНИЕ:");
+        
+       // --- Внутри блока Inspector в main.cpp ---
+        static std::vector<double> histData;
+        static std::string lastProcessedCol = "";
+
+        // Если колонка сменилась — перекачиваем данные (лимит 2000 для скорости)
+        if (lastProcessedCol != state.activeColumn) {
+        histData = model.GetColumnData(state.activeTable, state.activeColumn, 2000);
+        lastProcessedCol = state.activeColumn;
+    }
+
+    if (!histData.empty()) {
+        if (ImPlot::BeginPlot("##Histogram", ImVec2(-1, 150), ImPlotFlags_NoMouseText)) {
+        ImPlot::SetupAxes(nullptr, nullptr, ImPlotAxisFlags_NoLabel, ImPlotAxisFlags_NoLabel);
+        // Рисуем 15 столбиков распределения
+        ImPlot::PushStyleColor(ImPlotCol_Fill, ImVec4(0.2f, 0.5f, 0.9f, 0.7f));
+        ImPlot::PlotHistogram("##h", histData.data(), (int)histData.size(), 15);
+        ImPlot::PopStyleColor();
+        ImPlot::EndPlot();
+    }
+    } else {
+    ImGui::TextDisabled("Нет данных для распределения");
+    }  
+    ImGui::End();
 
 
         // --- 4. FOOTER (Навигация) ---
@@ -179,6 +202,7 @@ int main() {
     NFD_Quit();
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
+    ImPlot::DestroyContext();
     ImGui::DestroyContext();
     glfwDestroyWindow(window);
     glfwTerminate();
